@@ -1,0 +1,37 @@
+version: "2.4"
+
+services:
+    php:
+        image: php:7-cli
+        build:
+            context: .
+            target: composer
+        env_file:
+            - .env
+        working_dir: /code
+        environment:
+            MYSQL_HOST: mariadb
+        volumes:
+            - .:/code
+        tmpfs:
+            - /code/storage/logs
+            - /code/storage/temp
+        ports:
+            - 8000:8000
+        depends_on:
+            mariadb:
+                condition: service_healthy
+            elasticsearch:
+                condition: service_started
+
+    mariadb:
+        image: mariadb:10
+        env_file:
+            - .env
+        healthcheck:
+            test: nc -z 3306
+
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:6.4.0
+        healthcheck:
+            test: nc -z 9200
